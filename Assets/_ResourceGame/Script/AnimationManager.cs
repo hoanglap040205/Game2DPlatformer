@@ -44,6 +44,7 @@ public enum AnimationState
     IDLE_GUN,
     RUN_GUN,
     JUMP_GUN,
-    CROUNCH_GUN
+    CROUNCH_GUN,
+    HURT
 }
 

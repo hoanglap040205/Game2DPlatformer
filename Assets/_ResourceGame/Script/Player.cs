@@ -1,5 +1,4 @@
-﻿using UnityEditor.U2D.Sprites;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Player : MonoBehaviour
 {
@@ -11,9 +10,15 @@ public class Player : MonoBehaviour
     [SerializeField] private float speed;
     [SerializeField] private float jumpForce;
     [SerializeField] private bool isGround;
-    [SerializeField] private float timeState;
     [SerializeField] private bool isCrounching;
-    [SerializeField] private bool isAttacking;
+
+    [Header("Attack")]
+    [SerializeField] private bool isGunAttacking;
+    [SerializeField] private bool canMeleeAttacking;
+    [SerializeField] private float attackCoolDown;
+    private float lastTimeAttack;
+
+
 
     [Header("Rotate")]
     private float directionRight;
@@ -33,42 +38,61 @@ public class Player : MonoBehaviour
     {
         InputValue = Input.GetAxis("Horizontal");
 
+        lastTimeAttack -= Time.deltaTime;
+        if(lastTimeAttack < 0f && canMeleeAttacking)
+        {
+            canMeleeAttacking = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            anim.changeAnim(AnimationState.HURT).changeAnim(AnimationState.IDLE);
+        }
+
 
         Movement();
-        Attack();
+        AttackGun();
+        AttackMelee();
+
         RotateControler(InputValue);
         Jump();
 
         Crounch();
 
         anim.changeBool("Ground", isGround);
-        anim.changeBool(AnimationState.ATTACK.ToString(), isAttacking);
+        anim.changeBool("AttackMelee", canMeleeAttacking);
+        anim.changeBool(AnimationState.ATTACK.ToString(), isGunAttacking);
         anim.changeBool(AnimationState.CROUNCH.ToString(), isCrounching);
-
-        anim.changeBlend(isAttacking ? anim.gunYvelocity : anim.yVelocity, Mathf.Clamp(rb.velocity.y, -jumpForce, jumpForce));
-        anim.changeBlend(isAttacking ? anim.gunXvelocity : anim.xVelocity , Mathf.Abs(inputValue));
+        anim.changeBlend(isGunAttacking ? anim.gunYvelocity : anim.yVelocity, Mathf.Clamp(rb.velocity.y, -jumpForce, jumpForce));
+        anim.changeBlend(isGunAttacking ? anim.gunXvelocity : anim.xVelocity, Mathf.Abs(inputValue));
     }
 
     private void FixedUpdate()
     {
         rb.velocity = new Vector2(InputValue * speed, rb.velocity.y);
+
+        if (canMeleeAttacking)
+        {
+            rb.velocity = new Vector2(directionRight * 0.7f, rb.velocity.y);
+            return;
+        }
     }
 
     private void Movement()
     {
         if (InputValue != 0)
         {
-            anim.changeAnim(isAttacking ? AnimationState.RUN_GUN : AnimationState.RUN);
+            anim.changeAnim(isGunAttacking ? AnimationState.RUN_GUN : AnimationState.RUN);
             InputValue /= 2f;
             if (Input.GetKey(KeyCode.LeftShift))
             {
                 InputValue *= 2;
             }
-            
+
         }
         else
         {
-            anim.changeAnim(isAttacking ? AnimationState.IDLE_GUN : AnimationState.IDLE);
+            anim.changeAnim(isGunAttacking ? AnimationState.IDLE_GUN : AnimationState.IDLE);
         }
     }
 
@@ -77,7 +101,7 @@ public class Player : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && isGround)
         {
             isGround = false;
-            anim.changeAnim(isAttacking ? AnimationState.JUMP_GUN : AnimationState.JUMP);
+            anim.changeAnim(isGunAttacking ? AnimationState.JUMP_GUN : AnimationState.JUMP);
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
     }
@@ -86,7 +110,7 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.S))
         {
-            isCrounching = true;
+            isCrounching = true;      
             inputValue = 0;
         }
         else
@@ -98,15 +122,24 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void Attack()
+    private void AttackGun()
     {
         if (Input.GetKey(KeyCode.O))
         {
-            isAttacking = true;
+            isGunAttacking = true;
         }
         else
         {
-            isAttacking = false;
+            isGunAttacking = false;
+        }
+    }
+
+    private void AttackMelee()
+    {
+        if(Input.GetKeyDown(KeyCode.J) && !canMeleeAttacking)
+        {
+            canMeleeAttacking = true;
+            lastTimeAttack = attackCoolDown;
         }
     }
 

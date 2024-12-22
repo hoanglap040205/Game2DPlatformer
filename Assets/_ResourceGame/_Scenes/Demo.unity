@@ -174,9 +174,10 @@ MonoBehaviour:
   speed: 5
   jumpForce: 15
   isGround: 0
-  timeState: 0
   isCrounching: 0
-  isAttacking: 0
+  isGunAttacking: 0
+  canMeleeAttacking: 0
+  attackCoolDown: 0.3
 --- !u!50 &582960124
 Rigidbody2D:
   serializedVersion: 4
