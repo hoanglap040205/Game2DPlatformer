@@ -3,6 +3,7 @@
 public class Player : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private PlayerAttack playerAttack;
     [SerializeField] private AnimationManager anim;
 
     private float inputValue;
@@ -12,11 +13,15 @@ public class Player : MonoBehaviour
     [SerializeField] private bool isGround;
     [SerializeField] private bool isCrounching;
 
-    [Header("Attack")]
-    [SerializeField] private bool isGunAttacking;
+    [Header("Attack Melee")]
     [SerializeField] private bool canMeleeAttacking;
     [SerializeField] private float attackCoolDown;
     private float lastTimeAttack;
+
+    [Header("Attack Gun")]
+    [SerializeField] private bool isGunAttacking;
+    [SerializeField] private float fireCoolDown;
+    [SerializeField] private float fireLastTime;
 
 
 
@@ -29,6 +34,7 @@ public class Player : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerAttack = GetComponent<PlayerAttack>();
         isRight = true;
         directionRight = 1f;
     }
@@ -43,13 +49,6 @@ public class Player : MonoBehaviour
         {
             canMeleeAttacking = false;
         }
-
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            anim.changeAnim(AnimationState.HURT).changeAnim(AnimationState.IDLE);
-        }
-
-
         Movement();
         AttackGun();
         AttackMelee();
@@ -127,6 +126,11 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.O))
         {
             isGunAttacking = true;
+            if(Time.time > fireLastTime + fireCoolDown && isGunAttacking)
+            {
+                playerAttack.gunFire();
+                fireLastTime = Time.time;
+            }
         }
         else
         {
@@ -162,8 +166,9 @@ public class Player : MonoBehaviour
         transform.Rotate(0, 180, 0);
     }
 
-    public float xVelocity => rb.velocity.x;
+    public void playerHurt() => anim.changeAnim(AnimationState.HURT).changeAnim(AnimationState.IDLE);
 
+    public void playerDie() => anim.changeAnim(AnimationState.DIE);
 
     private void OnCollisionEnter2D(Collision2D collision)
     {

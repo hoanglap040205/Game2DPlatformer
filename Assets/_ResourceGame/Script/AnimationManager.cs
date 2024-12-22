@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class AnimationManager : MonoBehaviour
+public class AnimationManager : AnimationBase
 {
     public Animator animator;
     public AnimationState currentState = AnimationState.IDLE;
@@ -14,20 +14,20 @@ public class AnimationManager : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    public AnimationManager changeAnim(AnimationState _state)
+    public override AnimationBase changeAnim(AnimationState _state)
     {
         currentState = _state;
         animator.SetTrigger(_state.ToString());
         return this;
     }
 
-    public AnimationManager changeBlend(string name , float value)
+    public override AnimationBase changeBlend(string name , float value)
     {
         animator.SetFloat(name, value);
         return this;
     }
 
-    public AnimationManager changeBool(string name , bool value)
+    public override AnimationBase changeBool(string name , bool value)
     {
         animator.SetBool(name, value);
         return this;
@@ -45,6 +45,7 @@ public enum AnimationState
     RUN_GUN,
     JUMP_GUN,
     CROUNCH_GUN,
-    HURT
+    HURT,
+    DIE
 }
 
