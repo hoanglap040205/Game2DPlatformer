@@ -16,7 +16,10 @@ class PatrolState : State
     public override void OnEnter(){ }
 
     public override void OnUpdate(){}
-    
+    public override void OnHurt()
+    {
+    }
+
     public override void OnExit(){}
     
 }
@@ -25,6 +28,7 @@ class ChaseStae: State
 {
     public override void OnEnter(){ }
     public override void OnUpdate(){}
+    public override void OnHurt(){}
     public override void OnExit(){}
 }
 
@@ -34,6 +38,7 @@ class AttackState : State
     {
     }
     public override void OnUpdate(){}
+    public override void OnHurt(){}
     public override void OnExit(){}
 }
 
@@ -46,6 +51,8 @@ class Death : State
     public override void OnUpdate()
     {
     }
+    
+    public override void OnHurt(){}
     public override void OnExit(){}
 }
 

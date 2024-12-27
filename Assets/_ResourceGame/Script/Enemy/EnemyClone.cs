@@ -32,7 +32,7 @@ public class EnemyClone : MonoBehaviour
    private bool GroundCheck()
    {
       bool checkGround = Physics2D.Raycast(checkObtacles.transform.position, -Vector2.up,distanceCheck, platformLayer);
-      Debug.Log($"Check ground: {checkGround}");
+     // Debug.Log($"Check ground: {checkGround}");
 
       if (checkGround)
       {
@@ -49,7 +49,7 @@ public class EnemyClone : MonoBehaviour
    {
       Vector2 pointCheck = (Vector2)transform.position + offset;
       bool checkWall = Physics2D.Raycast(pointCheck, Vector2.right * facingDirection,distanceCheck, platformLayer);
-      Debug.Log($"Check Wall: {checkWall}");
+     // Debug.Log($"Check Wall: {checkWall}");
 
       if (!checkWall)
       {

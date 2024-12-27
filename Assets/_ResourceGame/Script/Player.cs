@@ -123,7 +123,7 @@ public class Player : MonoBehaviour
 
     private void AttackGun()
     {
-        if (Input.GetKey(KeyCode.O))
+        if (Input.GetKey(KeyCode.F))
         {
             isGunAttacking = true;
             if(Time.time > fireLastTime + fireCoolDown && isGunAttacking)
