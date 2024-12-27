@@ -1,26 +1,40 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Player : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private PlayerAttack playerAttack;
     [SerializeField] private AnimationManager anim;
 
     private float inputValue;
-    private float timeState;
+    private string blendValue;
     [SerializeField] private float speed;
+    [SerializeField] private float jumpForce;
     [SerializeField] private bool isGround;
+    [SerializeField] private bool isCrounching;
+
+    [Header("Attack Melee")]
+    [SerializeField] private bool canMeleeAttacking;
+    [SerializeField] private float attackCoolDown;
+    private float lastTimeAttack;
+
+    [Header("Attack Gun")]
+    [SerializeField] private bool isGunAttacking;
+    [SerializeField] private float fireCoolDown;
+    [SerializeField] private float fireLastTime;
+
 
 
     [Header("Rotate")]
     private float directionRight;
     private bool isRight;
 
+    public float InputValue { get => inputValue; set => inputValue = value; }
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerAttack = GetComponent<PlayerAttack>();
         isRight = true;
         directionRight = 1f;
     }
@@ -28,66 +42,118 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        InputValue = Input.GetAxis("Horizontal");
+
+        lastTimeAttack -= Time.deltaTime;
+        if(lastTimeAttack < 0f && canMeleeAttacking)
+        {
+            canMeleeAttacking = false;
+        }
         Movement();
-        RotateControler(inputValue);
+        AttackGun();
+        AttackMelee();
 
+        RotateControler(InputValue);
         Jump();
-        Crounching();
 
+        Crounch();
 
-        anim.animFloat(anim.yVelocity, rb.velocity.y);
-        anim.animFloat(anim.xVelocity, Mathf.Abs(inputValue));
+        anim.changeBool("Ground", isGround);
+        anim.changeBool("AttackMelee", canMeleeAttacking);
+        anim.changeBool(AnimationState.ATTACK.ToString(), isGunAttacking);
+        anim.changeBool(AnimationState.CROUNCH.ToString(), isCrounching);
+        anim.changeBlend(isGunAttacking ? anim.gunYvelocity : anim.yVelocity, Mathf.Clamp(rb.velocity.y, -jumpForce, jumpForce));
+        anim.changeBlend(isGunAttacking ? anim.gunXvelocity : anim.xVelocity, Mathf.Abs(inputValue));
     }
 
     private void FixedUpdate()
     {
-        rb.velocity = new Vector2(inputValue * speed, rb.velocity.y);
+        rb.velocity = new Vector2(InputValue * speed, rb.velocity.y);
+
+        if (canMeleeAttacking)
+        {
+            rb.velocity = new Vector2(directionRight * 0.7f, rb.velocity.y);
+            return;
+        }
     }
 
     private void Movement()
     {
-        inputValue = Input.GetAxis("Horizontal");
-        if (inputValue != 0 && isGround)
+        if (InputValue != 0)
         {
-            anim.changeState(AnimationState.RUN);
-            inputValue /= 2f;
+            anim.changeAnim(isGunAttacking ? AnimationState.RUN_GUN : AnimationState.RUN);
+            InputValue /= 2f;
             if (Input.GetKey(KeyCode.LeftShift))
             {
-                inputValue *= 2;
+                InputValue *= 2;
             }
+
         }
         else
         {
-            anim.changeState(AnimationState.IDLE);
-        }
-    }
-
-    private void Crounching()
-    {
-        if (Input.GetKey(KeyCode.S))
-        {
-            anim.changeState(AnimationState.CROUNCH);
-            inputValue = 0;
+            anim.changeAnim(isGunAttacking ? AnimationState.IDLE_GUN : AnimationState.IDLE);
         }
     }
 
     private void Jump()
     {
-        if(Input.GetKeyDown(KeyCode.Space) && isGround)
+        if (Input.GetKeyDown(KeyCode.Space) && isGround)
         {
-            anim.changeState(AnimationState.JUMP);
             isGround = false;
-            rb.velocity = new Vector2(rb.velocity.x, 10f);
+            anim.changeAnim(isGunAttacking ? AnimationState.JUMP_GUN : AnimationState.JUMP);
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+    }
+
+    private void Crounch()
+    {
+        if (Input.GetKey(KeyCode.S))
+        {
+            isCrounching = true;      
+            inputValue = 0;
+        }
+        else
+        {
+            if (isCrounching)
+            {
+                isCrounching = false;
+            }
+        }
+    }
+
+    private void AttackGun()
+    {
+        if (Input.GetKey(KeyCode.O))
+        {
+            isGunAttacking = true;
+            if(Time.time > fireLastTime + fireCoolDown && isGunAttacking)
+            {
+                playerAttack.gunFire();
+                fireLastTime = Time.time;
+            }
+        }
+        else
+        {
+            isGunAttacking = false;
+        }
+    }
+
+    private void AttackMelee()
+    {
+        if(Input.GetKeyDown(KeyCode.J) && !canMeleeAttacking)
+        {
+            canMeleeAttacking = true;
+            lastTimeAttack = attackCoolDown;
         }
     }
 
     private void RotateControler(float x)
     {
-        if(x > 0 && !isRight)
+        if (x > 0 && !isRight)
         {
             Rotate();
         }
-        else if(x < 0 && isRight)
+        else if (x < 0 && isRight)
         {
             Rotate();
         }
@@ -100,6 +166,9 @@ public class Player : MonoBehaviour
         transform.Rotate(0, 180, 0);
     }
 
+    public void playerHurt() => anim.changeAnim(AnimationState.HURT).changeAnim(AnimationState.IDLE);
+
+    public void playerDie() => anim.changeAnim(AnimationState.DIE);
 
     private void OnCollisionEnter2D(Collision2D collision)
     {

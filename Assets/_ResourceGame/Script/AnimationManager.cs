@@ -1,43 +1,36 @@
 ﻿using UnityEngine;
 
-public class AnimationManager : MonoBehaviour
+public class AnimationManager : AnimationBase
 {
-    [SerializeField] private Animator animator;
-    private AnimationState currentState = AnimationState.IDLE;
+    public Animator animator;
+    public AnimationState currentState = AnimationState.IDLE;
     public readonly string xVelocity = "xVelocity";
     public readonly string yVelocity = "yVelocity";
+    public readonly string gunXvelocity = "gunVelocity";
+    public readonly string gunYvelocity = "gunYvelocity";
 
     void Start()
     {
         animator = GetComponent<Animator>();
-
-        enterState(currentState);
     }
 
-    public void animFloat(string nameAnim, float value)
+    public override AnimationBase changeAnim(AnimationState _state)
     {
-        animator.SetFloat(nameAnim, value);
+        currentState = _state;
+        animator.SetTrigger(_state.ToString());
+        return this;
     }
 
-    private void enterState(AnimationState _state)
+    public override AnimationBase changeBlend(string name , float value)
     {
-        animator.SetBool(_state.ToString(), true);
+        animator.SetFloat(name, value);
+        return this;
     }
 
-    private void exitState(AnimationState _state)
+    public override AnimationBase changeBool(string name , bool value)
     {
-        animator.SetBool(_state.ToString(), false);
-    }
-
-    public void changeState(AnimationState _state)
-    {
-        if (_state == currentState)
-        {
-            return;
-        }
-        exitState(currentState); // Thoát state hiện tại
-        currentState = _state; // cập nhập state mới
-        enterState(currentState); // Bắt đầu state
+        animator.SetBool(name, value);
+        return this;
     }
 }
 
@@ -46,6 +39,13 @@ public enum AnimationState
     IDLE,
     RUN,
     JUMP,
-    CROUNCH
+    CROUNCH,
+    ATTACK,
+    IDLE_GUN,
+    RUN_GUN,
+    JUMP_GUN,
+    CROUNCH_GUN,
+    HURT,
+    DIE
 }
 
