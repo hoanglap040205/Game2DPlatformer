@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -11,10 +12,13 @@ public class EnemyClone : MonoBehaviour
    [SerializeField] private float moveSpeed;
    public GameObject checkObtacles;
    [SerializeField] private LayerMask platformLayer;
+   [SerializeField] private LayerMask playerLayer;
    [SerializeField] private float distanceCheck;
    private bool facingRight = true;
    private int facingDirection = 1;
+   private float startHealth = 100f;
 
+   public GameObject player;
    private Vector2 offset = new Vector2(0.1f,0.1f);
 
    private void Awake()
@@ -26,7 +30,15 @@ public class EnemyClone : MonoBehaviour
    {
       GroundCheck();
       WallCheck();
-      body.velocity = Vector2.right * moveSpeed * facingDirection; 
+      if (CheckPlayer())
+      {
+         Vector2 chasePlayer = Vector2.MoveTowards(transform.position,player.transform.position,moveSpeed * Time.deltaTime);
+         body.velocity = (chasePlayer - (Vector2)transform.position).normalized * moveSpeed;
+      }
+      else
+      {
+         body.velocity = Vector2.right * moveSpeed * facingDirection; 
+      }
    }
 
    private bool GroundCheck()
@@ -49,8 +61,6 @@ public class EnemyClone : MonoBehaviour
    {
       Vector2 pointCheck = (Vector2)transform.position + offset;
       bool checkWall = Physics2D.Raycast(pointCheck, Vector2.right * facingDirection,distanceCheck, platformLayer);
-     // Debug.Log($"Check Wall: {checkWall}");
-
       if (!checkWall)
       {
        return true;
@@ -76,6 +86,16 @@ public class EnemyClone : MonoBehaviour
       Gizmos.DrawRay(checkObtacles.transform.position, -Vector2.up * distanceCheck);
       Gizmos.color = Color.green;
       Gizmos.DrawRay((Vector2)checkObtacles.transform.position + offset, Vector2.right * facingDirection* distanceCheck);
+      Gizmos.DrawWireSphere(transform.position,3f);
    }
+
+   private bool CheckPlayer()
+   {
+      bool isPlayer = Physics2D.CircleCast(transform.position,3f,Vector2.right * facingDirection,3f, playerLayer);
+      Debug.Log(isPlayer);
+      return isPlayer;
+   }
+
+   
 }
 
