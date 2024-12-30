@@ -13,6 +13,12 @@ public class Player : MonoBehaviour
     [SerializeField] private bool isGround;
     [SerializeField] private bool isCrounching;
 
+    [Header("Ground check")]
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundDistance;
+    [SerializeField] private LayerMask WhatIsMask;
+
+
     [Header("Attack Melee")]
     [SerializeField] private bool canMeleeAttacking;
     [SerializeField] private float attackCoolDown;
@@ -58,11 +64,11 @@ public class Player : MonoBehaviour
 
         Crounch();
 
-        anim.changeBool("Ground", isGround);
+        anim.changeBool("Ground", IsGround());
         anim.changeBool("AttackMelee", canMeleeAttacking);
         anim.changeBool(AnimationState.ATTACK.ToString(), isGunAttacking);
         anim.changeBool(AnimationState.CROUNCH.ToString(), isCrounching);
-        anim.changeBlend(isGunAttacking ? anim.gunYvelocity : anim.yVelocity, Mathf.Clamp(rb.velocity.y, -jumpForce, jumpForce));
+        anim.changeBlend(isGunAttacking ? anim.gunYvelocity : anim.yVelocity, rb.velocity.y);
         anim.changeBlend(isGunAttacking ? anim.gunXvelocity : anim.xVelocity, Mathf.Abs(inputValue));
     }
 
@@ -79,6 +85,8 @@ public class Player : MonoBehaviour
 
     private void Movement()
     {
+        if (!IsGround()) return;
+
         if (InputValue != 0)
         {
             anim.changeAnim(isGunAttacking ? AnimationState.RUN_GUN : AnimationState.RUN);
@@ -97,9 +105,9 @@ public class Player : MonoBehaviour
 
     private void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && isGround)
+        if (Input.GetKeyDown(KeyCode.Space) && IsGround())
         {
-            isGround = false;
+            //isGround = false;
             anim.changeAnim(isGunAttacking ? AnimationState.JUMP_GUN : AnimationState.JUMP);
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
@@ -170,14 +178,12 @@ public class Player : MonoBehaviour
 
     public void playerDie() => anim.changeAnim(AnimationState.DIE);
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground")) isGround = true;
-    }
+    private bool IsGround() => Physics2D.Raycast(groundCheck.position, Vector2.down, groundDistance, WhatIsMask);
 
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground")) isGround = false;
-    }
 
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(groundCheck.position , new Vector3(groundCheck.position.x , groundCheck.position.y - groundDistance , groundCheck.position.z));
+    }
 }

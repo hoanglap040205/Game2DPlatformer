@@ -9,6 +9,11 @@ public class AnimationManager : AnimationBase
     public readonly string gunXvelocity = "gunVelocity";
     public readonly string gunYvelocity = "gunYvelocity";
 
+    [Header("Attack Infor")]
+    [SerializeField] private float radiusAttack;
+    [SerializeField] private Transform attackPos;
+    [SerializeField] private LayerMask Mask;
+
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -31,6 +36,24 @@ public class AnimationManager : AnimationBase
     {
         animator.SetBool(name, value);
         return this;
+    }
+
+    public void AttackEventTrigger()
+    {
+        Collider2D[] hit = Physics2D.OverlapCircleAll(attackPos.position , radiusAttack , Mask);
+        foreach(var i in hit)
+        {
+            if(i != null)
+            {
+                Debug.Log(i.name);
+            }
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(attackPos.position, radiusAttack);
     }
 }
 
